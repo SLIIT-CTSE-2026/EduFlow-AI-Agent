@@ -1,0 +1,48 @@
+# Bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Packaging / tooling
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors (optional — remove if you want these committed)
+.idea/
+.vscode/
+
+# --- EduFlow runtime outputs ( remove this block if  want to track these) ---
+AG01_Document_Searcher.txt
+AG02_Content_Summarizer.txt
+AG03_Quiz_Generator.txt
+AG04_Final_Study_Report.md
+study_materials/*.pdf
