@@ -1,0 +1,2 @@
+# Optional: enables full property-based tests in AG02_evaluation.py (Hypothesis).
+hypothesis>=6.92
