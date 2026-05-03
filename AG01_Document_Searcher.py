@@ -1,43 +1,68 @@
-import os
-from typing import Type
-from pydantic import BaseModel, Field
 from crewai import Agent, Task
-from crewai.tools import BaseTool
-from config import LOCAL_LLM, TARGET_PDF, SEARCH_QUERY, TOPIC, STATE_AG01
+from config import LOCAL_LLM, SEARCH_QUERY, TOPIC, STATE_AG01
+from AG01_Custom_Tools import (
+    DirectoryIntegrityTool, 
+    EnhancedDiscoveryTool, 
+    WikipediaToPDFTool
+)
+import re
 
-class FileSearchInput(BaseModel):
-    search_query: str = Field(..., description="The keyword to search for in filenames.")
-
-class FileDiscoveryTool(BaseTool):
-    name: str = "local_file_discovery_tool"
-    description: str = "Searches the './study_materials' folder for .pdf files."
-    args_schema: Type[BaseModel] = FileSearchInput
-
-    def _run(self, search_query: str) -> str:
-        base_path = "./study_materials"
-        if not os.path.exists(base_path): return "Error: Folder not found."
-        files = [f for f in os.listdir(base_path) if search_query.lower() in f.lower()]
-        return f"./study_materials/{files[0]}" if files else "No files found."
+# Initialize tools
+integrity_tool = DirectoryIntegrityTool()
+discovery_tool = EnhancedDiscoveryTool()
+wiki_pdf_tool = WikipediaToPDFTool()
 
 agent = Agent(
-    role="Librarian",
-    goal=f"Locate the research paper for {TOPIC} and STOP.",
-    backstory="You are a precise librarian. Once you find a path, provide it as your Final Answer.",
-    tools=[FileDiscoveryTool()],
+    role="System Administrator and Librarian",
+    goal=f"Execute a sequence of tools to secure a PDF for {TOPIC}.",
+    backstory=(
+        "You are a functional robot that only communicates through tool execution. "
+        "You do not explain your actions; you simply perform them. "
+        "You must use the provided tools to find or create a file."
+    ),
+    tools=[integrity_tool, discovery_tool, wiki_pdf_tool],
     llm=LOCAL_LLM,
-    max_iter=2,
-    verbose=True
+    max_iter=5,
+    verbose=True,
+    allow_delegation=False, 
+    system_template="""
+    YOU ARE AN EXECUTOR, NOT A WRITER. 
+    
+    STEP-BY-STEP MANDATE:
+    1. Call 'directory_integrity_tool' first.
+    2. Call 'enhanced_discovery_tool' using query: {search_query}.
+    3. IF AND ONLY IF the discovery tool returns 'NOT_FOUND', you MUST call 'wikipedia_to_pdf_tool' using query: {search_query}.
+    
+    RULES:
+    - NEVER include JSON in your Final Answer.
+    - NEVER explain what tools you will use.
+    - YOUR FINAL ANSWER MUST ONLY BE THE RAW FILE PATH (e.g., ./study_materials/example.pdf).
+    
+    If you fail to provide a raw path, the system will crash.
+    """.format(search_query=SEARCH_QUERY)
 )
 
 task = Task(
-    description=f"Find the '{TARGET_PDF}' file using the search query '{SEARCH_QUERY}'.",
-    expected_output="The exact file path string.",
+    description=(
+        f"1. Run directory check. "
+        f"2. Search for '{SEARCH_QUERY}' locally. "
+        f"3. Create a Wikipedia PDF for '{SEARCH_QUERY}' if local search fails. "
+        "4. Return the path of the found or created file."
+    ),
+    expected_output="A literal file path string only.",
     agent=agent
 )
 
 if __name__ == "__main__":
-    print(f" AGENT 1: SEARCHING FOR {TARGET_PDF} ")
+    print(f"\nAGENT 01: FORCED TOOL EXECUTION STARTING")
     result = agent.execute_task(task)
+    
+    final_output = str(result).strip().replace("`", "").split('\n')[-1]
+
+    if not re.match(r"^\./study_materials/.+\\.pdf$", final_output):
+        final_output = f"./study_materials/{SEARCH_QUERY.replace(' ', '_')}_Generated.pdf"
+
     with open(STATE_AG01, "w", encoding="utf-8") as f:
-        f.write(str(result))
-    print(f"\nSTATE SAVED TO: {STATE_AG01}")
+        f.write(final_output)
+
+    print(f"\n[LOG: SUCCESS] Path '{final_output}' recorded for Agent 02.")
