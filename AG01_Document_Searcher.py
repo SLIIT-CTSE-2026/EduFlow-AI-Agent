@@ -5,6 +5,7 @@ from AG01_Custom_Tools import (
     EnhancedDiscoveryTool, 
     WikipediaToPDFTool
 )
+import re
 
 # Initialize tools
 integrity_tool = DirectoryIntegrityTool()
@@ -57,10 +58,10 @@ if __name__ == "__main__":
     result = agent.execute_task(task)
     
     final_output = str(result).strip().replace("`", "").split('\n')[-1]
-    
-    if "{" in final_output and "parameters" in final_output:
-         final_output = f"./study_materials/{SEARCH_QUERY.replace(' ', '_')}_Generated.pdf"
-    
+
+    if not re.match(r"^\./study_materials/.+\\.pdf$", final_output):
+        final_output = f"./study_materials/{SEARCH_QUERY.replace(' ', '_')}_Generated.pdf"
+
     with open(STATE_AG01, "w", encoding="utf-8") as f:
         f.write(final_output)
 
