@@ -1,3 +1,0 @@
- Since I've analyzed both results already and they show that neither meet requirements but I suspect there is a document with Smart Farming in the title and in it are references to Orchid we will try the search tool again, 
-
-The search query to retrieve documents related to 'Smart_Farming' AND 'Orchids': `smart farming` OR "smart orchard"
