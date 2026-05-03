@@ -10,5 +10,5 @@ STATE_AG03 = "AG03_Quiz_Generator.txt"
 FINAL_REPORT = "AG04_Final_Study_Report.md"
 
 # DYNAMIC TARGETS
-SEARCH_QUERY = "Cricket"
-TOPIC = "Playing cricket"
+SEARCH_QUERY = "Chess"
+TOPIC = "How to play chess and basic strategies for beginners"

@@ -23,8 +23,7 @@ agent = Agent(
     llm=LOCAL_LLM,
     max_iter=5,
     verbose=True,
-    allow_delegation=False,
-    # This template forces the ReAct (Thought/Action/Observation) loop
+    allow_delegation=False, 
     system_template="""
     YOU ARE AN EXECUTOR, NOT A WRITER. 
     
@@ -42,7 +41,6 @@ agent = Agent(
     """.format(search_query=SEARCH_QUERY)
 )
 
-# Task is now a direct command to prevent the LLM from "planning"
 task = Task(
     description=(
         f"1. Run directory check. "
@@ -55,15 +53,12 @@ task = Task(
 )
 
 if __name__ == "__main__":
-    print(f"\n### AGENT 01: FORCED TOOL EXECUTION STARTING ###")
+    print(f"\nAGENT 01: FORCED TOOL EXECUTION STARTING")
     result = agent.execute_task(task)
     
-    # Logic to extract just the path if the LLM still includes prose
     final_output = str(result).strip().replace("`", "").split('\n')[-1]
     
-    # If the LLM outputted JSON, we try to grab just the value it was suggesting
     if "{" in final_output and "parameters" in final_output:
-         # Hard-coded fallback if the agent just outputs the tool call again
          final_output = f"./study_materials/{SEARCH_QUERY.replace(' ', '_')}_Generated.pdf"
     
     with open(STATE_AG01, "w", encoding="utf-8") as f:
