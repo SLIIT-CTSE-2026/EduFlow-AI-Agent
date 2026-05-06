@@ -4,7 +4,7 @@ from typing import Type
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 
-# ── Logging Setup ──────────────────────────────────────────
+# ── Logging ───────────────────────────────────────────────
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
     filename="logs/agent_trace.log",
@@ -13,106 +13,74 @@ logging.basicConfig(
 )
 
 # ══════════════════════════════════════════════════════════
-# TOOL 1 — Quiz Saver Tool
+# TOOL 1 — Quiz Saver
 # ══════════════════════════════════════════════════════════
 
 class QuizSaverInput(BaseModel):
-    """Input schema for QuizSaverTool."""
     content: str = Field(..., description="Full MCQ quiz text")
 
 
 class QuizSaverTool(BaseTool):
-    """
-    Saves MCQ quiz content to local file.
-    """
-
     name: str = "quiz_saver_tool"
-    description: str = "Saves quiz text to a local file"
+    description: str = "Save quiz to local file"
     args_schema: Type[BaseModel] = QuizSaverInput
 
     def _run(self, content: str) -> str:
         from config import STATE_AG03
 
-        logging.info(f"[TOOL CALL] QuizSaverTool")
+        logging.info("[TOOL] QuizSaverTool called")
 
-        # ── Validation ─────────────────────────
-        if not content or not content.strip():
-            return "[ERROR] Empty quiz content"
+        if not content.strip():
+            return "[ERROR] Empty quiz"
 
-        if len(content) < 50:
-            return "[ERROR] Quiz content too short"
+        if "Q1." not in content:
+            return "[ERROR] Invalid format"
 
         try:
             with open(STATE_AG03, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            size = os.path.getsize(STATE_AG03)
-
-            success_msg = f"[SUCCESS] Quiz saved → {STATE_AG03} ({size} bytes)"
-            logging.info(success_msg)
-            return success_msg
+            return "[SUCCESS] Quiz saved"
 
         except Exception as e:
-            error = f"[ERROR] Save failed: {str(e)}"
-            logging.error(error)
-            return error
+            return f"[ERROR] {str(e)}"
 
 
 # ══════════════════════════════════════════════════════════
-# TOOL 2 — Quiz Validator Tool
+# TOOL 2 — Quiz Validator
 # ══════════════════════════════════════════════════════════
 
 class QuizValidatorInput(BaseModel):
-    """Input schema for QuizValidatorTool."""
-    file_path: str = Field(..., description="Path to quiz file")
+    file_path: str = Field(...)
 
 
 class QuizValidatorTool(BaseTool):
-    """
-    Validates structure of saved quiz file.
-    """
-
     name: str = "quiz_validator_tool"
-    description: str = "Validates quiz format"
+    description: str = "Validate quiz format"
     args_schema: Type[BaseModel] = QuizValidatorInput
 
     def _run(self, file_path: str) -> str:
 
-        logging.info(f"[TOOL CALL] QuizValidatorTool")
+        logging.info("[TOOL] QuizValidatorTool called")
 
         if not os.path.exists(file_path):
-            return f"[ERROR] File not found: {file_path}"
+            return "[ERROR] File not found"
 
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                content = f.read()
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
 
-            # ── Checks ─────────────────────────
-            q_count = content.count("Q")
-            has_a = "A)" in content
-            has_b = "B)" in content
-            has_c = "C)" in content
-            has_ans = "Answer:" in content
+        issues = []
 
-            issues = []
+        if content.count("Q") < 10:
+            issues.append("Not enough questions")
 
-            if q_count < 5:
-                issues.append(f"Only {q_count} questions found")
-            if not (has_a and has_b and has_c):
-                issues.append("Missing A/B/C options")
-            if not has_ans:
-                issues.append("Missing answers")
+        if "A)" not in content or "B)" not in content or "C)" not in content:
+            issues.append("Missing options")
 
-            if issues:
-                error_msg = f"[FAILED] {', '.join(issues)}"
-                logging.warning(error_msg)
-                return error_msg
+        if "Answer:" not in content:
+            issues.append("Missing answers")
 
-            success_msg = "[PASSED] Quiz format is valid"
-            logging.info(success_msg)
-            return success_msg
+        if issues:
+            return "[FAILED] " + ", ".join(issues)
 
-        except Exception as e:
-            error = f"[ERROR] Validation failed: {str(e)}"
-            logging.error(error)
-            return error
+        return "[PASSED] Quiz valid"
