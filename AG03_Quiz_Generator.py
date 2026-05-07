@@ -6,7 +6,7 @@ from config import LOCAL_LLM, STATE_AG02, STATE_AG03
 
 from AG03_Custom_Tools import QuizSaverTool, QuizValidatorTool
 
-# ── Logging ───────────────────────────────────────────────
+# Logging 
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
     filename="logs/agent_trace.log",
@@ -14,14 +14,12 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
 
-# ── Tools ────────────────────────────────────────────────
+# Tools 
 quiz_saver = QuizSaverTool()
 quiz_validator = QuizValidatorTool()
 
 
-# ══════════════════════════════════════════════════════════
-# CLEAN FUNCTION (STRONG VERSION)
-# ══════════════════════════════════════════════════════════
+
 
 def clean_output(text: str) -> str:
     """
@@ -52,9 +50,9 @@ def clean_output(text: str) -> str:
     return text.strip()
 
 
-# ══════════════════════════════════════════════════════════
+
 # AGENT
-# ══════════════════════════════════════════════════════════
+
 
 agent = Agent(
     role="Strict Exam Generator",
@@ -87,9 +85,8 @@ agent = Agent(
 )
 
 
-# ══════════════════════════════════════════════════════════
 # MAIN
-# ══════════════════════════════════════════════════════════
+
 
 if __name__ == "__main__":
 
@@ -154,7 +151,7 @@ CRITICAL:
 
     result = crew.kickoff()
 
-    # ── CLEAN OUTPUT ──────────────────────
+    # CLEAN OUTPUT 
     quiz_text = clean_output(str(result))
 
     print("\n=== CLEAN QUIZ ===\n")
@@ -162,12 +159,12 @@ CRITICAL:
 
     logging.info("[AG03 OUTPUT] Quiz generated")
 
-    # ── SAVE ─────────────────────────────
+    # SAVE 
     save = quiz_saver.run(content=quiz_text)
     print("\n[SAVE]", save)
     logging.info(save)
 
-    # ── VALIDATE ─────────────────────────
+    # VALIDATE 
     validate = quiz_validator.run(file_path=STATE_AG03)
     print("\n[VALIDATION]", validate)
     logging.info(validate)

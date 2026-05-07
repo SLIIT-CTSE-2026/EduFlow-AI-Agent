@@ -22,7 +22,7 @@ def run_llm_judge():
         quiz = f.read().strip()
 
     # ── Initialize LLM ───────────────────
-    model_name = LOCAL_LLM.split("/")[-1]  # extracts "llama3.1" from "ollama/llama3.1"
+    model_name = LOCAL_LLM.split("/")[-1]  
     llm = ChatOllama(model=model_name)
 
     # ── Judge Prompt ─────────────────────
@@ -57,10 +57,10 @@ Issues:
 - issue 2
 """
 
-    # ── Call LLM ─────────────────────────
+    #  Call LLM 
     response = llm.invoke(prompt)
 
-    # ── Extract response content ──────────
+    #  Extract response content 
     if hasattr(response, "content"):
         result = response.content
     else:
@@ -69,7 +69,7 @@ Issues:
     print("\n=== LLM JUDGE RESULT ===\n")
     print(result)
 
-    # ── Save report ──────────────────────
+    #  Save report 
     with open("AG03_Judge_Report.txt", "w", encoding="utf-8") as f:
         f.write(result)
 

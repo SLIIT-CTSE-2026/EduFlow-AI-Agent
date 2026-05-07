@@ -4,7 +4,7 @@ from typing import Type
 from pydantic import BaseModel, Field
 from crewai.tools import BaseTool
 
-# ── Logging ───────────────────────────────────────────────
+#  Logging 
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
     filename="logs/agent_trace.log",
@@ -12,9 +12,8 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
 
-# ══════════════════════════════════════════════════════════
+
 # TOOL 1 — Quiz Saver
-# ══════════════════════════════════════════════════════════
 
 class QuizSaverInput(BaseModel):
     content: str = Field(..., description="Full MCQ quiz text")
@@ -46,9 +45,9 @@ class QuizSaverTool(BaseTool):
             return f"[ERROR] {str(e)}"
 
 
-# ══════════════════════════════════════════════════════════
+
 # TOOL 2 — Quiz Validator
-# ══════════════════════════════════════════════════════════
+
 
 class QuizValidatorInput(BaseModel):
     file_path: str = Field(...)
